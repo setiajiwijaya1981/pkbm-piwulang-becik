@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PKBM Piwulang Becik — Sistem Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hijau: #2D6A4F;
+    --hijau-muda: #40916C;
+    --hijau-terang: #74C69D;
+    --hijau-pucat: #D8F3DC;
+    --kuning: #F4A261;
+    --kuning-muda: #FFDDD2;
+    --merah: #E76F51;
+    --biru: #2196F3;
+    --biru-muda: #E3F2FD;
+    --putih: #FAFAF8;
+    --abu: #F4F4F0;
+    --abu-gelap: #8B8B7A;
+    --teks: #1A1A14;
+    --teks-muda: #5C5C4A;
+    --border: #E0E0D4;
+    --shadow: 0 2px 12px rgba(45,106,79,0.08);
+    --shadow-lg: 0 8px 32px rgba(45,106,79,0.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--abu); color:var(--teks); min-height:100vh; }
+
+  /* ───── LOGIN ───── */
+  #login-screen {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
+    position:relative; overflow:hidden;
+  }
+  #login-screen::before {
+    content:''; position:absolute; top:-100px; right:-100px;
+    width:400px; height:400px; border-radius:50%;
+    background:rgba(116,198,157,0.15); pointer-events:none;
+  }
+  #login-screen::after {
+    content:''; position:absolute; bottom:-80px; left:-80px;
+    width:300px; height:300px; border-radius:50%;
+    background:rgba(244,162,97,0.1); pointer-events:none;
+  }
+  .login-card {
+    background:var(--putih); border-radius:24px; padding:48px 40px;
+    width:100%; max-width:440px; box-shadow:0 24px 64px rgba(0,0,0,0.2);
+    position:relative; z-index:1;
+  }
+  .login-logo { text-align:center; margin-bottom:32px; }
+  .login-logo .logo-icon {
+    width:72px; height:72px; border-radius:20px;
+    background:linear-gradient(135deg,var(--hijau),var(--hijau-muda));
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 16px; font-size:32px; box-shadow:0 8px 24px rgba(45,106,79,0.3);
+  }
+  .login-logo h1 { font-family:'Fraunces',serif; font-size:22px; color:var(--hijau); font-weight:700; }
+  .login-logo p { font-size:13px; color:var(--abu-gelap); margin-top:4px; }
+  .login-tabs { display:flex; background:var(--abu); border-radius:10px; padding:4px; margin-bottom:28px; gap:4px; }
+  .login-tab {
+    flex:1; padding:8px; text-align:center; border:none; background:none;
+    border-radius:7px; font-size:13px; font-weight:500; color:var(--teks-muda);
+    cursor:pointer; transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .login-tab.active { background:var(--putih); color:var(--hijau); font-weight:600; box-shadow:var(--shadow); }
+  .form-group { margin-bottom:18px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--teks); margin-bottom:7px; }
+  .form-input {
+    width:100%; padding:12px 16px; border:2px solid var(--border); border-radius:10px;
+    font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--teks);
+    background:var(--putih); transition:border-color .2s; outline:none;
+  }
+  .form-input:focus { border-color:var(--hijau-muda); }
+  .btn-login {
+    width:100%; padding:14px; background:linear-gradient(135deg,var(--hijau),var(--hijau-muda));
+    color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:600;
+    font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all .2s;
+    box-shadow:0 4px 16px rgba(45,106,79,0.3); margin-top:8px;
+  }
+  .btn-login:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(45,106,79,0.4); }
+  .demo-accounts { margin-top:24px; padding-top:24px; border-top:1px solid var(--border); }
+  .demo-accounts p { font-size:12px; color:var(--abu-gelap); margin-bottom:10px; text-align:center; font-weight:500; }
+  .demo-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .demo-btn {
+    padding:8px 10px; border:1.5px solid var(--border); border-radius:8px;
+    background:var(--abu); font-size:12px; cursor:pointer; transition:all .2s;
+    font-family:'Plus Jakarta Sans',sans-serif; color:var(--teks-muda); font-weight:500;
+  }
+  .demo-btn:hover { border-color:var(--hijau-muda); color:var(--hijau); background:var(--hijau-pucat); }
+
+  /* ───── APP SHELL ───── */
+  #app { display:none; min-height:100vh; }
+  .app-layout { display:flex; min-height:100vh; }
+
+  /* ───── SIDEBAR ───── */
+  .sidebar {
+    width:260px; background:linear-gradient(180deg, #1B4332 0%, #2D6A4F 100%);
+    color:#fff; display:flex; flex-direction:column; position:fixed;
+    top:0; left:0; height:100vh; z-index:100; transition:transform .3s;
+  }
+  .sidebar-header { padding:24px 20px 20px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .sidebar-logo { display:flex; align-items:center; gap:12px; }
+  .sidebar-logo .s-icon {
+    width:40px; height:40px; border-radius:10px;
+    background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:20px;
+  }
+  .sidebar-logo .s-text h2 { font-family:'Fraunces',serif; font-size:15px; font-weight:700; line-height:1.2; }
+  .sidebar-logo .s-text p { font-size:11px; opacity:0.6; margin-top:2px; }
+  .sidebar-user { padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .user-avatar {
+    width:38px; height:38px; border-radius:50%; background:var(--hijau-terang);
+    display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+  }
+  .user-info h3 { font-size:13px; font-weight:600; }
+  .user-info p { font-size:11px; opacity:0.6; margin-top:1px; }
+  .sidebar-nav { flex:1; overflow-y:auto; padding:12px 12px; }
+  .nav-section { margin-bottom:20px; }
+  .nav-section-label { font-size:10px; font-weight:700; letter-spacing:1.2px; opacity:0.4; text-transform:uppercase; padding:0 8px; margin-bottom:6px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+    cursor:pointer; transition:all .2s; font-size:13.5px; font-weight:500; color:rgba(255,255,255,0.75);
+    margin-bottom:2px;
+  }
+  .nav-item:hover { background:rgba(255,255,255,0.1); color:#fff; }
+  .nav-item.active { background:rgba(255,255,255,0.18); color:#fff; font-weight:600; }
+  .nav-item .nav-icon { font-size:16px; width:20px; text-align:center; }
+  .nav-badge { margin-left:auto; background:var(--kuning); color:var(--teks); font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .sidebar-footer { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); }
+  .btn-logout {
+    width:100%; padding:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+    color:rgba(255,255,255,0.75); border-radius:8px; cursor:pointer; font-size:13px;
+    font-family:'Plus Jakarta Sans',sans-serif; transition:all .2s;
+  }
+  .btn-logout:hover { background:rgba(231,111,81,0.3); color:#fff; border-color:transparent; }
+
+  /* ───── MAIN ───── */
+  .main-content { margin-left:260px; flex:1; padding:28px 32px; min-height:100vh; }
+  .page-header { margin-bottom:28px; }
+  .page-header h1 { font-family:'Fraunces',serif; font-size:28px; font-weight:700; color:var(--teks); }
+  .page-header p { font-size:14px; color:var(--teks-muda); margin-top:4px; }
+  .page-header-row { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+
+  /* ───── CARDS & STATS ───── */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--putih); border-radius:var(--radius); padding:20px;
+    box-shadow:var(--shadow); display:flex; align-items:center; gap:16px;
+    border:1px solid var(--border); transition:transform .2s;
+  }
+  .stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+  .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .stat-info h3 { font-size:24px; font-weight:700; color:var(--teks); }
+  .stat-info p { font-size:12px; color:var(--abu-gelap); margin-top:2px; font-weight:500; }
+  .card {
+    background:var(--putih); border-radius:var(--radius); padding:24px;
+    box-shadow:var(--shadow); border:1px solid var(--border);
+  }
+  .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .card-title { font-family:'Fraunces',serif; font-size:17px; font-weight:600; color:var(--teks); }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+
+  /* ───── BADGES / STATUS ───── */
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+  .badge-bm { background:#F5F5F5; color:#888; }
+  .badge-sb { background:#FFF3CD; color:#856404; }
+  .badge-ts { background:#FFF0E6; color:#C44B00; }
+  .badge-t  { background:var(--hijau-pucat); color:var(--hijau); }
+  .badge-admin { background:#E8EAF6; color:#3949AB; }
+  .badge-tutor { background:#E0F7FA; color:#00695C; }
+  .badge-siswa { background:var(--hijau-pucat); color:var(--hijau); }
+  .badge-staff { background:var(--kuning-muda); color:#C44B00; }
+
+  /* ───── TABLE ───── */
+  .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--border); }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead { background:var(--abu); }
+  th { padding:12px 14px; text-align:left; font-weight:600; color:var(--teks-muda); font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  td { padding:13px 14px; border-top:1px solid var(--border); color:var(--teks); vertical-align:middle; }
+  tr:hover td { background:var(--hijau-pucat); }
+  .btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:none; font-family:'Plus Jakarta Sans',sans-serif; transition:all .2s; }
+  .btn-primary { background:var(--hijau); color:#fff; }
+  .btn-primary:hover { background:var(--hijau-muda); }
+  .btn-sm { padding:5px 12px; font-size:12px; }
+  .btn-outline { background:none; border:1.5px solid var(--border); color:var(--teks-muda); }
+  .btn-outline:hover { border-color:var(--hijau); color:var(--hijau); }
+  .btn-danger { background:#FEECEC; color:var(--merah); border:1.5px solid #FECACA; }
+
+  /* ───── PROGRESS ───── */
+  .progress-bar { background:var(--abu); border-radius:20px; height:8px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:20px; background:linear-gradient(90deg,var(--hijau),var(--hijau-terang)); transition:width .6s; }
+  .progress-fill.orange { background:linear-gradient(90deg,var(--kuning),#F8C471); }
+  .progress-fill.red { background:linear-gradient(90deg,var(--merah),#F1948A); }
+
+  /* ───── NOTIF ───── */
+  .notif-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); }
+  .notif-item:last-child { border-bottom:none; }
+  .notif-dot { width:10px; height:10px; border-radius:50%; background:var(--hijau-muda); flex-shrink:0; margin-top:5px; }
+  .notif-dot.unread { background:var(--kuning); }
+  .notif-dot.info { background:var(--biru); }
+  .notif-text { font-size:13.5px; color:var(--teks); line-height:1.5; }
+  .notif-time { font-size:11px; color:var(--abu-gelap); margin-top:3px; }
+
+  /* ───── MODAL ───── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:200;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--putih); border-radius:20px; width:100%; max-width:540px;
+    max-height:90vh; overflow-y:auto; padding:32px; box-shadow:0 24px 64px rgba(0,0,0,0.2);
+  }
+  .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .modal-header h2 { font-family:'Fraunces',serif; font-size:20px; font-weight:700; }
+  .modal-close { width:32px; height:32px; border-radius:8px; border:none; background:var(--abu); cursor:pointer; font-size:16px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  select.form-input { cursor:pointer; }
+  textarea.form-input { resize:vertical; min-height:80px; }
+
+  /* ───── TABS (page) ───── */
+  .page-tabs { display:flex; gap:4px; background:var(--abu); border-radius:10px; padding:4px; margin-bottom:24px; width:fit-content; }
+  .page-tab {
+    padding:9px 20px; border-radius:7px; border:none; background:none;
+    font-size:13.5px; font-weight:500; color:var(--teks-muda); cursor:pointer;
+    font-family:'Plus Jakarta Sans',sans-serif; transition:all .2s;
+  }
+  .page-tab.active { background:var(--putih); color:var(--hijau); font-weight:600; box-shadow:var(--shadow); }
+
+  /* ───── ATP TRACKER ───── */
+  .atp-subject { background:var(--putih); border-radius:var(--radius); border:1px solid var(--border); overflow:hidden; margin-bottom:16px; }
+  .atp-subject-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; cursor:pointer; user-select:none;
+  }
+  .atp-subject-header:hover { background:var(--abu); }
+  .atp-subject-title { display:flex; align-items:center; gap:12px; }
+  .atp-subject-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .atp-list { padding:0 20px 16px; border-top:1px solid var(--border); }
+  .atp-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; border-radius:8px; margin-top:8px;
+    background:var(--abu); gap:12px; flex-wrap:wrap;
+  }
+  .atp-row-left { flex:1; min-width:200px; }
+  .atp-row-left p { font-size:13px; font-weight:500; color:var(--teks); }
+  .atp-row-left span { font-size:11px; color:var(--abu-gelap); }
+  .atp-row-right { display:flex; gap:8px; align-items:center; }
+  .status-select {
+    padding:5px 10px; border-radius:6px; border:1.5px solid var(--border);
+    font-size:12px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; background:var(--putih);
+  }
+
+  /* ───── CHAT ───── */
+  .chat-layout { display:grid; grid-template-columns:280px 1fr; gap:20px; height:600px; }
+  .chat-list { border:1px solid var(--border); border-radius:var(--radius); overflow-y:auto; }
+  .chat-person {
+    display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer;
+    border-bottom:1px solid var(--border); transition:background .15s;
+  }
+  .chat-person:hover, .chat-person.active { background:var(--hijau-pucat); }
+  .chat-avatar { width:40px; height:40px; border-radius:50%; background:var(--hijau-terang); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .chat-person-info h4 { font-size:13.5px; font-weight:600; }
+  .chat-person-info p { font-size:12px; color:var(--abu-gelap); margin-top:2px; }
+  .chat-unread { margin-left:auto; background:var(--hijau); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .chat-window { border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; overflow:hidden; }
+  .chat-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--putih); }
+  .chat-messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; background:var(--abu); }
+  .msg { max-width:70%; }
+  .msg.sent { align-self:flex-end; }
+  .msg.recv { align-self:flex-start; }
+  .msg-bubble { padding:10px 14px; border-radius:14px; font-size:13.5px; line-height:1.5; }
+  .msg.sent .msg-bubble { background:var(--hijau); color:#fff; border-bottom-right-radius:4px; }
+  .msg.recv .msg-bubble { background:var(--putih); color:var(--teks); border-bottom-left-radius:4px; box-shadow:var(--shadow); }
+  .msg-time { font-size:11px; color:var(--abu-gelap); margin-top:4px; text-align:right; }
+  .chat-input-area { padding:14px 16px; border-top:1px solid var(--border); display:flex; gap:10px; background:var(--putih); }
+  .chat-input { flex:1; padding:10px 14px; border:1.5px solid var(--border); border-radius:24px; font-size:13.5px; font-family:'Plus Jakarta Sans',sans-serif; outline:none; }
+  .chat-input:focus { border-color:var(--hijau-muda); }
+  .btn-send { width:40px; height:40px; border-radius:50%; background:var(--hijau); border:none; cursor:pointer; color:#fff; font-size:16px; flex-shrink:0; transition:background .2s; }
+  .btn-send:hover { background:var(--hijau-muda); }
+
+  /* ───── PROFILE TAG ───── */
+  .role-tag { display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+
+  /* ───── MISC ───── */
+  .empty-state { text-align:center; padding:48px 20px; color:var(--abu-gelap); }
+  .empty-state .e-icon { font-size:48px; margin-bottom:12px; opacity:0.4; }
+  .divider { height:1px; background:var(--border); margin:20px 0; }
+  .hidden { display:none !important; }
+  .text-sm { font-size:13px; color:var(--teks-muda); }
+  .font-bold { font-weight:700; }
+  .mt-1 { margin-top:4px; } .mt-2 { margin-top:8px; } .mt-3 { margin-top:16px; } .mt-4 { margin-top:24px; }
+  .flex { display:flex; } .items-center { align-items:center; } .gap-2 { gap:8px; } .gap-3 { gap:12px; }
+  .color-hijau { color:var(--hijau); }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+  .chip-green { background:var(--hijau-pucat); color:var(--hijau); }
+  .chip-yellow { background:var(--kuning-muda); color:#C44B00; }
+  .chip-gray { background:var(--abu); color:var(--abu-gelap); }
+
+  @media(max-width:900px){
+    .sidebar { transform:translateX(-100%); }
+    .main-content { margin-left:0; padding:20px 16px; }
+    .grid-2,.grid-3 { grid-template-columns:1fr; }
+    .chat-layout { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ LOGIN SCREEN ═══════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🌱</div>
+      <h1>Piwulang Becik</h1>
+      <p>Pusat Kegiatan Belajar Masyarakat</p>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('admin')">Admin</button>
+      <button class="login-tab" onclick="switchLoginTab('tutor')">Tutor</button>
+      <button class="login-tab" onclick="switchLoginTab('siswa')">Siswa</button>
+      <button class="login-tab" onclick="switchLoginTab('staff')">Staff</button>
+    </div>
+    <div class="form-group">
+      <label>Username / Email</label>
+      <input class="form-input" id="login-user" type="text" placeholder="Masukkan username..." value="admin">
+    </div>
+    <div class="form-group">
+      <label>Kata Sandi</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="Masukkan kata sandi..." value="admin123">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Masuk →</button>
+    <div class="demo-accounts">
+      <p>✨ Demo cepat — klik untuk login langsung:</p>
+      <div class="demo-grid">
+        <button class="demo-btn" onclick="quickLogin('admin')">👨‍💼 Admin</button>
+        <button class="demo-btn" onclick="quickLogin('tutor')">👩‍🏫 Bu Ratna (Tutor)</button>
+        <button class="demo-btn" onclick="quickLogin('siswa')">🧑‍🎓 Budi (Siswa)</button>
+        <button class="demo-btn" onclick="quickLogin('staff')">👔 Staff</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ APP ═══════════════════════════ -->
+<div id="app">
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="s-icon">🌱</div>
+          <div class="s-text">
+            <h2>Piwulang Becik</h2>
+            <p>Sistem Monitoring</p>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-avatar">👨‍💼</div>
+        <div class="user-info">
+          <h3 id="sidebar-name">Admin</h3>
+          <p id="sidebar-role">Administrator</p>
+        </div>
+      </div>
+      <div class="sidebar-nav" id="sidebar-nav"></div>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="doLogout()">⬅ Keluar</button>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main-content" id="main-content"></main>
+  </div>
+</div>
+
+<!-- MODAL ADD SISWA -->
+<div class="modal-overlay" id="modal-siswa">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Tambah Peserta Didik</h2>
+      <button class="modal-close" onclick="closeModal('modal-siswa')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nama Lengkap *</label><input class="form-input" id="f-nama" placeholder="Nama lengkap..." type="text"></div>
+      <div class="form-group"><label>NISN</label><input class="form-input" id="f-nisn" placeholder="Nomor induk..." type="text"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Paket</label>
+        <select class="form-input" id="f-paket">
+          <option>Paket A</option><option>Paket B</option><option>Paket C</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Fase</label>
+        <select class="form-input" id="f-fase">
+          <option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tutor Pembimbing</label>
+        <select class="form-input" id="f-tutor">
+          <option>Bu Ratna</option><option>Pak Joko</option><option>Bu Sari</option>
+        </select>
+      </div>
+      <div class="form-group"><label>No. HP / WA</label><input class="form-input" id="f-hp" placeholder="08xxxxxxxxxx" type="text"></div>
+    </div>
+    <div class="form-group"><label>Alamat</label><textarea class="form-input" id="f-alamat" placeholder="Alamat lengkap..."></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-siswa')">Batal</button>
+      <button class="btn btn-primary" onclick="saveSiswa()">Simpan Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD TUTOR -->
+<div class="modal-overlay" id="modal-tutor">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Tambah Tutor / Pendidik</h2>
+      <button class="modal-close" onclick="closeModal('modal-tutor')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nama Lengkap *</label><input class="form-input" id="t-nama" placeholder="Nama lengkap..." type="text"></div>
+      <div class="form-group"><label>NUPTK</label><input class="form-input" id="t-nuptk" placeholder="Nomor unik..." type="text"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Mata Pelajaran Utama</label>
+        <select class="form-input" id="t-mapel">
+          <option>Pancasila</option><option>Bahasa Indonesia</option><option>Matematika</option><option>Ilmu Pengetahuan Alam & Sosial</option><option>Seni Budaya</option><option>PJOK</option><option>Bahasa Inggris</option>
+        </select>
+      </div>
+      <div class="form-group"><label>No. HP / WA</label><input class="form-input" id="t-hp" placeholder="08xxxxxxxxxx" type="text"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-tutor')">Batal</button>
+      <button class="btn btn-primary" onclick="saveTutor()">Simpan Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NILAI -->
+<div class="modal-overlay" id="modal-nilai">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Input Penilaian</h2>
+      <button class="modal-close" onclick="closeModal('modal-nilai')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Peserta Didik</label>
+        <select class="form-input" id="n-siswa">
+          <option>Budi Santoso</option><option>Ani Rahayu</option><option>Deni Firmansyah</option><option>Siti Nurhaliza</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Mata Pelajaran</label>
+        <select class="form-input" id="n-mapel">
+          <option>Pancasila</option><option>Bahasa Indonesia</option><option>Matematika</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Alur / ATP</label>
+        <select class="form-input" id="n-atp">
+          <option>ATP 1 – Mengenal Pancasila</option><option>ATP 2 – Sila-sila Pancasila</option><option>ATP 3 – Nilai Pancasila</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Jenis Penilaian</label>
+        <select class="form-input" id="n-jenis">
+          <option>Formatif</option><option>Sumatif</option><option>Projek</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nilai (0–100) *</label><input class="form-input" id="n-nilai" type="number" min="0" max="100" placeholder="Masukkan nilai..."></div>
+      <div class="form-group"><label>Status KKTP</label>
+        <select class="form-input" id="n-kktp">
+          <option>Belum Tercapai (0–55)</option><option>Tercapai Sebagian (56–70)</option><option>Tercapai (71–85)</option><option>Melampaui (86–100)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Catatan Tutor</label><textarea class="form-input" id="n-catatan" placeholder="Catatan perkembangan, rekomendasi remedial/pengayaan..."></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-nilai')">Batal</button>
+      <button class="btn btn-primary" onclick="saveNilai()">Simpan Nilai</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+const USERS = {
+  admin:  { name:'Admin PKBM', role:'admin',  label:'Administrator', avatar:'👨‍💼', pass:'admin123' },
+  tutor:  { name:'Bu Ratna',   role:'tutor',  label:'Tutor / Pendidik', avatar:'👩‍🏫', pass:'ratna123' },
+  siswa:  { name:'Budi Santoso', role:'siswa', label:'Peserta Didik – Fase A', avatar:'🧑‍🎓', pass:'budi123' },
+  staff:  { name:'Pak Joko',   role:'staff',  label:'Staff Sekolah', avatar:'👔', pass:'joko123' },
+};
+
+let currentUser = null;
+let currentPage = 'dashboard';
+
+const DATA = {
+  siswa: [
+    { id:1, nama:'Budi Santoso',     nisn:'0012345678', paket:'Paket A', fase:'Fase A', tutor:'Bu Ratna', hp:'081234567890', progress:72 },
+    { id:2, nama:'Ani Rahayu',       nisn:'0012345679', paket:'Paket A', fase:'Fase A', tutor:'Bu Ratna', hp:'081234567891', progress:88 },
+    { id:3, nama:'Deni Firmansyah',  nisn:'0012345680', paket:'Paket B', fase:'Fase C', tutor:'Pak Joko', hp:'081234567892', progress:45 },
+    { id:4, nama:'Siti Nurhaliza',   nisn:'0012345681', paket:'Paket A', fase:'Fase B', tutor:'Bu Sari',  hp:'081234567893', progress:93 },
+    { id:5, nama:'Rudi Hartono',     nisn:'0012345682', paket:'Paket C', fase:'Fase E', tutor:'Pak Joko', hp:'081234567894', progress:61 },
+  ],
+  tutors: [
+    { id:1, nama:'Bu Ratna',  nuptk:'1234567890', mapel:'Pancasila', hp:'082111222333', siswa:18 },
+    { id:2, nama:'Pak Joko',  nuptk:'1234567891', mapel:'Matematika', hp:'082111222334', siswa:15 },
+    { id:3, nama:'Bu Sari',   nuptk:'1234567892', mapel:'Bahasa Indonesia', hp:'082111222335', siswa:20 },
+  ],
+  nilai: [
+    { siswa:'Budi Santoso',  mapel:'Pancasila',        atp:'ATP 1',  jenis:'Formatif', nilai:78,  kktp:'Tercapai',          catatan:'Baik, perlu latihan mandiri.' },
+    { siswa:'Ani Rahayu',    mapel:'Pancasila',        atp:'ATP 2',  jenis:'Sumatif',  nilai:90,  kktp:'Melampaui',         catatan:'Sangat baik, lanjut pengayaan.' },
+    { siswa:'Deni Firmansyah', mapel:'Matematika',     atp:'ATP 1',  jenis:'Formatif', nilai:52,  kktp:'Belum Tercapai',    catatan:'Remedial dijadwalkan.' },
+    { siswa:'Siti Nurhaliza', mapel:'Bahasa Indonesia',atp:'ATP 3',  jenis:'Sumatif',  nilai:88,  kktp:'Melampaui',         catatan:'Konsisten melampaui target.' },
+    { siswa:'Rudi Hartono',   mapel:'Pancasila',       atp:'ATP 2',  jenis:'Formatif', nilai:65,  kktp:'Tercapai Sebagian', catatan:'Perlu penguatan konsep.' },
+  ],
+  atp: [
+    { mapel:'Pancasila', ikon:'🏛️', warna:'#E8F5E9',
+      items:[
+        { kode:'ATP-1', judul:'Mengenal lambang negara & Pancasila', fase:'Fase A', status:'T' },
+        { kode:'ATP-2', judul:'Sila-sila Pancasila dalam kehidupan', fase:'Fase A', status:'SB' },
+        { kode:'ATP-3', judul:'Nilai Pancasila di lingkungan keluarga', fase:'Fase A', status:'BM' },
+        { kode:'ATP-4', judul:'Para perumus Pancasila', fase:'Fase A', status:'BM' },
+      ]},
+    { mapel:'Bahasa Indonesia', ikon:'📚', warna:'#E3F2FD',
+      items:[
+        { kode:'ATP-1', judul:'Membaca teks sederhana', fase:'Fase A', status:'T' },
+        { kode:'ATP-2', judul:'Menulis kalimat dasar', fase:'Fase A', status:'T' },
+        { kode:'ATP-3', judul:'Menyimak dan berbicara', fase:'Fase A', status:'TS' },
+      ]},
+    { mapel:'Matematika', ikon:'🔢', warna:'#FFF3E0',
+      items:[
+        { kode:'ATP-1', judul:'Bilangan cacah 1–100', fase:'Fase A', status:'T' },
+        { kode:'ATP-2', judul:'Penjumlahan dan pengurangan', fase:'Fase A', status:'SB' },
+        { kode:'ATP-3', judul:'Pengenalan bentuk dan pengukuran', fase:'Fase A', status:'BM' },
+      ]},
+  ],
+  notif: [
+    { teks:'Budi Santoso menyelesaikan ATP-1 Pancasila', waktu:'10 menit lalu', tipe:'unread' },
+    { teks:'Nilai Deni Firmansyah di bawah KKTP — remedial disarankan', waktu:'1 jam lalu', tipe:'unread' },
+    { teks:'Ani Rahayu mencapai status Melampaui di Bahasa Indonesia', waktu:'2 jam lalu', tipe:'info' },
+    { teks:'Laporan bulanan April sudah tersedia', waktu:'Kemarin', tipe:'' },
+    { teks:'Jadwal supervisi kepala PKBM: Jumat, 14 Maret 2026', waktu:'2 hari lalu', tipe:'' },
+  ],
+  chat: {
+    'Bu Ratna': [
+      { from:'Bu Ratna', text:'Selamat pagi Budi! Jangan lupa kerjakan latihan ATP-2 ya 😊', time:'08.15' },
+      { from:'me', text:'Baik Bu, siap! Saya sudah baca modulnya.', time:'08.20' },
+      { from:'Bu Ratna', text:'Bagus! Kalau ada kesulitan langsung tanya saja disini.', time:'08.22' },
+    ],
+    'Admin PKBM': [
+      { from:'Admin PKBM', text:'Info: Jadwal ujian sumatif akan dilaksanakan 20 Maret.', time:'09.00' },
+    ],
+    'Pak Joko': [],
+  },
+  logBelajar: [
+    { tanggal:'10 Mar 2026', mapel:'Pancasila', atp:'ATP-1', durasi:'90 mnt', refleksi:'Saya sudah mengenal lambang garuda. Ini sangat menarik!' },
+    { tanggal:'08 Mar 2026', mapel:'Matematika', atp:'ATP-1', durasi:'60 mnt', refleksi:'Bilangan 1-100 sudah hafal. Mau lanjut ke penjumlahan.' },
+    { tanggal:'06 Mar 2026', mapel:'Bahasa Indonesia', atp:'ATP-2', durasi:'75 mnt', refleksi:'Menulis kalimat masih perlu berlatih lebih banyak.' },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+let activeLoginRole = 'admin';
+function switchLoginTab(role) {
+  activeLoginRole = role;
+  document.querySelectorAll('.login-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['admin','tutor','siswa','staff'][i]===role);
+  });
+}
+function quickLogin(role) {
+  currentUser = { ...USERS[role], key:role };
+  showApp();
+}
+function doLogin() {
+  currentUser = { ...USERS[activeLoginRole], key:activeLoginRole };
+  showApp();
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+function showApp() {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('sidebar-avatar').textContent = currentUser.avatar;
+  document.getElementById('sidebar-name').textContent = currentUser.name;
+  document.getElementById('sidebar-role').textContent = currentUser.label;
+  buildNav();
+  navigate('dashboard');
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+const NAV_CONFIG = {
+  admin: [
+    { section:'Utama', items:[
+      { id:'dashboard', icon:'🏠', label:'Dashboard' },
+      { id:'siswa', icon:'🧑‍🎓', label:'Data Siswa' },
+      { id:'tutor', icon:'👩‍🏫', label:'Data Tutor' },
+    ]},
+    { section:'Pembelajaran', items:[
+      { id:'kurikulum', icon:'📋', label:'Kurikulum & ATP' },
+      { id:'penilaian', icon:'📊', label:'Penilaian & Nilai' },
+      { id:'laporan', icon:'📈', label:'Laporan' },
+    ]},
+    { section:'Komunikasi', items:[
+      { id:'notifikasi', icon:'🔔', label:'Notifikasi', badge:2 },
+      { id:'pesan', icon:'💬', label:'Pesan' },
+    ]},
+  ],
+  tutor: [
+    { section:'Utama', items:[
+      { id:'dashboard', icon:'🏠', label:'Dashboard' },
+      { id:'siswa', icon:'🧑‍🎓', label:'Siswa Saya' },
+    ]},
+    { section:'Pembelajaran', items:[
+      { id:'atp-tracker', icon:'📋', label:'Monitoring ATP' },
+      { id:'penilaian', icon:'📊', label:'Input Penilaian' },
+      { id:'laporan', icon:'📈', label:'Laporan' },
+    ]},
+    { section:'Komunikasi', items:[
+      { id:'notifikasi', icon:'🔔', label:'Notifikasi', badge:2 },
+      { id:'pesan', icon:'💬', label:'Pesan Siswa' },
+    ]},
+  ],
+  siswa: [
+    { section:'Belajar Saya', items:[
+      { id:'dashboard', icon:'🏠', label:'Beranda' },
+      { id:'atp-tracker', icon:'📋', label:'Alur Belajar Saya' },
+      { id:'nilai-saya', icon:'📊', label:'Nilai Saya' },
+      { id:'log-belajar', icon:'📓', label:'Log Belajar' },
+    ]},
+    { section:'Komunikasi', items:[
+      { id:'notifikasi', icon:'🔔', label:'Notifikasi' },
+      { id:'pesan', icon:'💬', label:'Pesan Tutor', badge:1 },
+    ]},
+  ],
+  staff: [
+    { section:'Utama', items:[
+      { id:'dashboard', icon:'🏠', label:'Dashboard' },
+      { id:'siswa', icon:'🧑‍🎓', label:'Data Siswa' },
+      { id:'laporan', icon:'📈', label:'Laporan' },
+    ]},
+    { section:'Komunikasi', items:[
+      { id:'notifikasi', icon:'🔔', label:'Notifikasi' },
+      { id:'pesan', icon:'💬', label:'Pesan' },
+    ]},
+  ],
+};
+
+function buildNav() {
+  const nav = document.getElementById('sidebar-nav');
+  const cfg = NAV_CONFIG[currentUser.key] || [];
+  nav.innerHTML = cfg.map(section=>`
+    <div class="nav-section">
+      <div class="nav-section-label">${section.section}</div>
+      ${section.items.map(item=>`
+        <div class="nav-item" id="nav-${item.id}" onclick="navigate('${item.id}')">
+          <span class="nav-icon">${item.icon}</span>
+          <span>${item.label}</span>
+          ${item.badge ? `<span class="nav-badge">${item.badge}</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const el = document.getElementById('nav-'+page);
+  if(el) el.classList.add('active');
+  const main = document.getElementById('main-content');
+  const role = currentUser.key;
+  if(page==='dashboard') main.innerHTML = renderDashboard(role);
+  else if(page==='siswa') main.innerHTML = renderSiswa();
+  else if(page==='tutor') main.innerHTML = renderTutor();
+  else if(page==='kurikulum') main.innerHTML = renderKurikulum();
+  else if(page==='atp-tracker') main.innerHTML = renderATPTracker(role);
+  else if(page==='penilaian') main.innerHTML = renderPenilaian(role);
+  else if(page==='laporan') main.innerHTML = renderLaporan();
+  else if(page==='notifikasi') main.innerHTML = renderNotifikasi();
+  else if(page==='pesan') main.innerHTML = renderPesan(role);
+  else if(page==='nilai-saya') main.innerHTML = renderNilaiSiswa();
+  else if(page==='log-belajar') main.innerHTML = renderLogBelajar();
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER PAGES
+// ═══════════════════════════════════════════════════════
+
+function renderDashboard(role) {
+  if(role==='admin'||role==='staff') return renderDashboardAdmin();
+  if(role==='tutor') return renderDashboardTutor();
+  if(role==='siswa') return renderDashboardSiswa();
+  return renderDashboardAdmin();
+}
+
+function renderDashboardAdmin() {
+  return `
+  <div class="page-header">
+    <h1>Selamat Datang, ${currentUser.name} 👋</h1>
+    <p>Rabu, 12 Maret 2026 — PKBM Piwulang Becik</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#E8F5E9">🧑‍🎓</div>
+      <div class="stat-info"><h3>53</h3><p>Total Peserta Didik</p></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#E3F2FD">👩‍🏫</div>
+      <div class="stat-info"><h3>3</h3><p>Tutor Aktif</p></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FFF3E0">📋</div>
+      <div class="stat-info"><h3>7</h3><p>Mata Pelajaran</p></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FCE4EC">⚠️</div>
+      <div class="stat-info"><h3>6</h3><p>Perlu Remedial</p></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📊 Progress per Fase</span>
+      </div>
+      ${[
+        {fase:'Fase A', persen:74, n:18},
+        {fase:'Fase B', persen:62, n:12},
+        {fase:'Fase C', persen:81, n:10},
+        {fase:'Fase D', persen:55, n:8},
+        {fase:'Fase E', persen:90, n:5},
+      ].map(f=>`
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:13.5px;font-weight:600;">${f.fase}</span>
+            <span style="font-size:12px;color:var(--abu-gelap)">${f.n} siswa · ${f.persen}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill ${f.persen<60?'red':f.persen<75?'orange':''}" style="width:${f.persen}%"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔔 Notifikasi Terbaru</span>
+        <button class="btn btn-sm btn-outline" onclick="navigate('notifikasi')">Lihat semua</button>
+      </div>
+      ${DATA.notif.slice(0,4).map(n=>`
+        <div class="notif-item">
+          <div class="notif-dot ${n.tipe}"></div>
+          <div>
+            <div class="notif-text">${n.teks}</div>
+            <div class="notif-time">${n.waktu}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+  <div class="card mt-4">
+    <div class="card-header">
+      <span class="card-title">👥 Siswa Butuh Perhatian</span>
+      <button class="btn btn-sm btn-primary" onclick="navigate('siswa')">Kelola Siswa</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nama</th><th>Fase</th><th>Tutor</th><th>Progress</th><th>Status</th></tr></thead>
+        <tbody>
+          ${DATA.siswa.filter(s=>s.progress<70).map(s=>`
+            <tr>
+              <td><strong>${s.nama}</strong></td>
+              <td>${s.fase}</td>
+              <td>${s.tutor}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="progress-bar" style="width:100px;flex-shrink:0"><div class="progress-fill red" style="width:${s.progress}%"></div></div>
+                  <span style="font-size:12px">${s.progress}%</span>
+                </div>
+              </td>
+              <td><span class="badge badge-ts">Perlu Perhatian</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderDashboardTutor() {
+  return `
+  <div class="page-header">
+    <h1>Dashboard Tutor 👩‍🏫</h1>
+    <p>Selamat datang, ${currentUser.name}</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon" style="background:#E8F5E9">🧑‍🎓</div><div class="stat-info"><h3>18</h3><p>Siswa Saya</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FFF3E0">⏳</div><div class="stat-info"><h3>5</h3><p>ATP Sedang Berjalan</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FCE4EC">⚠️</div><div class="stat-info"><h3>2</h3><p>Perlu Remedial</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#E3F2FD">✅</div><div class="stat-info"><h3>8</h3><p>ATP Tercapai Bulan Ini</p></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">🧑‍🎓 Siswa Saya</span><button class="btn btn-sm btn-primary" onclick="navigate('atp-tracker')">Monitoring ATP</button></div>
+      ${DATA.siswa.slice(0,4).map(s=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--hijau-pucat);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🧑</div>
+          <div style="flex:1;">
+            <div style="font-size:13.5px;font-weight:600;">${s.nama}</div>
+            <div style="font-size:11px;color:var(--abu-gelap)">${s.fase} · ${s.paket}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px;font-weight:700;color:${s.progress<60?'var(--merah)':s.progress<75?'var(--kuning)':'var(--hijau)'};">${s.progress}%</div>
+            <div style="font-size:11px;color:var(--abu-gelap)">Progress</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">🔔 Notifikasi</span></div>
+      ${DATA.notif.slice(0,4).map(n=>`
+        <div class="notif-item">
+          <div class="notif-dot ${n.tipe}"></div>
+          <div><div class="notif-text">${n.teks}</div><div class="notif-time">${n.waktu}</div></div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function renderDashboardSiswa() {
+  const siswa = DATA.siswa[0];
+  return `
+  <div class="page-header">
+    <h1>Halo, Budi! 👋</h1>
+    <p>Semangat belajar hari ini — Rabu, 12 Maret 2026</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon" style="background:#E8F5E9">✅</div><div class="stat-info"><h3>4</h3><p>ATP Tercapai</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FFF3E0">⏳</div><div class="stat-info"><h3>2</h3><p>Sedang Berjalan</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#E3F2FD">📊</div><div class="stat-info"><h3>78</h3><p>Rata-rata Nilai</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FCE4EC">🎯</div><div class="stat-info"><h3>72%</h3><p>Progress Keseluruhan</p></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">📋 Alur Belajar Aktif</span><button class="btn btn-sm btn-outline" onclick="navigate('atp-tracker')">Lihat semua</button></div>
+      ${DATA.atp.map(subj=>{
+        const aktif = subj.items.find(i=>i.status==='SB');
+        if(!aktif) return '';
+        return `
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--abu);border-radius:10px;margin-bottom:10px;">
+            <div style="font-size:24px;">${subj.ikon}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">${aktif.judul}</div>
+              <div style="font-size:11px;color:var(--abu-gelap)">${subj.mapel} · ${aktif.kode}</div>
+            </div>
+            <span class="badge badge-sb">SB</span>
+          </div>`;
+      }).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">💬 Pesan Tutor</span></div>
+      ${DATA.chat['Bu Ratna'].slice(-2).map(m=>`
+        <div class="notif-item">
+          <div class="notif-dot ${m.from!=='me'?'unread':''}"></div>
+          <div>
+            <div class="notif-text"><strong>${m.from==='me'?'Saya':m.from}:</strong> ${m.text}</div>
+            <div class="notif-time">${m.time}</div>
+          </div>
+        </div>
+      `).join('')}
+      <button class="btn btn-sm btn-outline mt-2" onclick="navigate('pesan')">Buka chat dengan Bu Ratna →</button>
+    </div>
+  </div>`;
+}
+
+function renderSiswa() {
+  return `
+  <div class="page-header-row">
+    <div class="page-header"><h1>Data Peserta Didik</h1><p>Kelola semua peserta didik PKBM Piwulang Becik</p></div>
+    ${currentUser.key==='admin'?`<button class="btn btn-primary" onclick="openModal('modal-siswa')">+ Tambah Siswa</button>`:''}
+  </div>
+  <div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#E8F5E9">📦</div><div class="stat-info"><h3>24</h3><p>Paket A</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#E3F2FD">📦</div><div class="stat-info"><h3>18</h3><p>Paket B</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FFF3E0">📦</div><div class="stat-info"><h3>11</h3><p>Paket C</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#F3E5F5">🧑‍🎓</div><div class="stat-info"><h3>53</h3><p>Total Aktif</p></div></div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>No</th><th>Nama</th><th>NISN</th><th>Paket / Fase</th><th>Tutor</th><th>Progress</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tbody-siswa">
+          ${DATA.siswa.map((s,i)=>`
+            <tr>
+              <td>${i+1}</td>
+              <td><strong>${s.nama}</strong></td>
+              <td><code style="font-size:12px;background:var(--abu);padding:2px 6px;border-radius:4px;">${s.nisn}</code></td>
+              <td><span class="chip chip-green">${s.paket}</span> <span class="chip chip-gray">${s.fase}</span></td>
+              <td>${s.tutor}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="progress-bar" style="width:80px;flex-shrink:0"><div class="progress-fill ${s.progress<60?'red':s.progress<75?'orange':''}" style="width:${s.progress}%"></div></div>
+                  <span style="font-size:12px;font-weight:600;">${s.progress}%</span>
+                </div>
+              </td>
+              <td style="display:flex;gap:6px;">
+                <button class="btn btn-sm btn-outline" onclick="alert('Detail siswa: '+DATA.siswa[${i}].nama)">Detail</button>
+                ${currentUser.key==='admin'?`<button class="btn btn-sm btn-danger" onclick="hapusSiswa(${s.id})">Hapus</button>`:''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderTutor() {
+  return `
+  <div class="page-header-row">
+    <div class="page-header"><h1>Data Tutor / Pendidik</h1><p>Kelola tenaga pendidik PKBM</p></div>
+    <button class="btn btn-primary" onclick="openModal('modal-tutor')">+ Tambah Tutor</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>No</th><th>Nama</th><th>NUPTK</th><th>Mapel Utama</th><th>Jml Siswa</th><th>Kontak</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${DATA.tutors.map((t,i)=>`
+            <tr>
+              <td>${i+1}</td>
+              <td><strong>${t.nama}</strong></td>
+              <td><code style="font-size:12px;background:var(--abu);padding:2px 6px;border-radius:4px;">${t.nuptk}</code></td>
+              <td><span class="chip chip-green">${t.mapel}</span></td>
+              <td><span class="badge badge-t">${t.siswa} siswa</span></td>
+              <td style="font-size:13px;">${t.hp}</td>
+              <td><button class="btn btn-sm btn-outline">Detail</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderKurikulum() {
+  const mapels = [
+    {nama:'Pancasila', fase:'A–F', atp:11, cp:4},
+    {nama:'Bahasa Indonesia', fase:'A–F', atp:14, cp:5},
+    {nama:'Matematika', fase:'A–F', atp:12, cp:4},
+    {nama:'Ilmu Pengetahuan Alam & Sosial', fase:'A–C', atp:10, cp:5},
+    {nama:'Seni Budaya', fase:'A–F', atp:8, cp:3},
+    {nama:'PJOK', fase:'A–F', atp:9, cp:3},
+    {nama:'Bahasa Inggris', fase:'D–F', atp:10, cp:4},
+  ];
+  return `
+  <div class="page-header"><h1>Kurikulum & Alur Tujuan Pembelajaran</h1><p>Struktur CP → TP → ATP per mata pelajaran dan fase</p></div>
+  <div class="page-tabs">
+    <button class="page-tab active" id="tab-mapel" onclick="switchKurTab('mapel')">Mata Pelajaran</button>
+    <button class="page-tab" id="tab-cp" onclick="switchKurTab('cp')">Capaian Pembelajaran</button>
+  </div>
+  <div id="kur-mapel">
+    <div class="grid-3">
+      ${mapels.map(m=>`
+        <div class="card" style="cursor:pointer;transition:transform .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''" onclick="alert('Detail kurikulum: '+this.dataset.mapel)" data-mapel="${m.nama}">
+          <div style="font-size:28px;margin-bottom:12px;">${m.nama==='Pancasila'?'🏛️':m.nama==='Matematika'?'🔢':m.nama.includes('Bahasa Inggris')?'🇬🇧':m.nama.includes('Alam')?'🔬':m.nama==='Seni Budaya'?'🎨':m.nama==='PJOK'?'⚽':'📚'}</div>
+          <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-bottom:8px;">${m.nama}</h3>
+          <div style="font-size:12px;color:var(--abu-gelap);margin-bottom:14px;">Fase ${m.fase}</div>
+          <div style="display:flex;gap:10px;">
+            <span class="chip chip-green">${m.cp} Elemen CP</span>
+            <span class="chip chip-gray">${m.atp} ATP</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+  <div id="kur-cp" class="hidden">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Capaian Pembelajaran — Pancasila Fase A</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No</th><th>Elemen</th><th>Capaian Pembelajaran</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Pancasila</strong></td><td>Peserta didik mengenal bendera negara, lagu kebangsaan, simbol dan sila-sila Pancasila dalam lambang negara Garuda Pancasila...</td></tr>
+            <tr><td>2</td><td><strong>UUD NRI 1945</strong></td><td>Peserta didik mengenal aturan di lingkungan keluarga; menceritakan contoh sikap mematuhi aturan...</td></tr>
+            <tr><td>3</td><td><strong>Bhinneka Tunggal Ika</strong></td><td>Peserta didik mengidentifikasi dan menghargai identitas dirinya sesuai dengan jenis kelamin, hobi, bahasa...</td></tr>
+            <tr><td>4</td><td><strong>NKRI</strong></td><td>Peserta didik mengenal karakteristik lingkungan tempat tinggal dan sekolah, sebagai bagian dari wilayah NKRI...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function switchKurTab(tab) {
+  document.getElementById('kur-mapel').classList.toggle('hidden', tab!=='mapel');
+  document.getElementById('kur-cp').classList.toggle('hidden', tab!=='cp');
+  document.getElementById('tab-mapel').classList.toggle('active', tab==='mapel');
+  document.getElementById('tab-cp').classList.toggle('active', tab==='cp');
+}
+
+function renderATPTracker(role) {
+  const isSiswa = role==='siswa';
+  return `
+  <div class="page-header">
+    <h1>${isSiswa?'Alur Belajar Saya':'Monitoring ATP Siswa'}</h1>
+    <p>${isSiswa?'Pantau progress belajarmu per alur tujuan pembelajaran':'Pantau dan update status alur tujuan pembelajaran siswa'}</p>
+  </div>
+  ${!isSiswa?`
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:13.5px;font-weight:600;">Filter Siswa:</span>
+      <select class="form-input" style="width:auto;padding:8px 12px;" onchange="">
+        ${DATA.siswa.map(s=>`<option>${s.nama}</option>`).join('')}
+      </select>
+      <span style="font-size:13px;color:var(--abu-gelap)">menampilkan Budi Santoso · Fase A · Paket A</span>
+    </div>
+  </div>`:''}
+  <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+    <span class="badge badge-bm">BM = Belum Mulai</span>
+    <span class="badge badge-sb">SB = Sedang Berjalan</span>
+    <span class="badge badge-ts">TS = Tercapai Sebagian</span>
+    <span class="badge badge-t">T = Tercapai</span>
+  </div>
+  ${DATA.atp.map((subj,si)=>`
+    <div class="atp-subject">
+      <div class="atp-subject-header" onclick="toggleATP(${si})">
+        <div class="atp-subject-title">
+          <div class="atp-subject-icon" style="background:${subj.warna}">${subj.ikon}</div>
+          <div>
+            <div style="font-weight:600;font-size:14px;">${subj.mapel}</div>
+            <div style="font-size:12px;color:var(--abu-gelap)">${subj.items.length} alur · ${subj.items.filter(i=>i.status==='T').length} tercapai</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:${Math.round(subj.items.filter(i=>i.status==='T').length/subj.items.length*100)}%"></div></div>
+          <span style="font-size:12px;font-weight:600;">${Math.round(subj.items.filter(i=>i.status==='T').length/subj.items.length*100)}%</span>
+          <span id="atp-chevron-${si}">▼</span>
+        </div>
+      </div>
+      <div class="atp-list" id="atp-list-${si}">
+        ${subj.items.map((item,ii)=>`
+          <div class="atp-row">
+            <div class="atp-row-left">
+              <p>${item.kode} — ${item.judul}</p>
+              <span>${item.fase}</span>
+            </div>
+            <div class="atp-row-right">
+              <span class="badge badge-${item.status.toLowerCase()}">${item.status}</span>
+              ${!isSiswa?`<select class="status-select" onchange="updateATP(${si},${ii},this.value)">
+                <option ${item.status==='BM'?'selected':''}>BM</option>
+                <option ${item.status==='SB'?'selected':''}>SB</option>
+                <option ${item.status==='TS'?'selected':''}>TS</option>
+                <option ${item.status==='T'?'selected':''}>T</option>
+              </select>`:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('')}`;
+}
+
+function toggleATP(i) {
+  const list = document.getElementById('atp-list-'+i);
+  const chev = document.getElementById('atp-chevron-'+i);
+  const hidden = list.style.display==='none';
+  list.style.display = hidden?'':'none';
+  chev.textContent = hidden?'▼':'▶';
+}
+function updateATP(si, ii, val) {
+  DATA.atp[si].items[ii].status = val;
+}
+
+function renderPenilaian(role) {
+  const isTutor = role==='tutor';
+  return `
+  <div class="page-header-row">
+    <div class="page-header"><h1>Penilaian & Nilai</h1><p>Rekap nilai dan status KKTP peserta didik</p></div>
+    ${isTutor?`<button class="btn btn-primary" onclick="openModal('modal-nilai')">+ Input Nilai</button>`:''}
+  </div>
+  <div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card"><div class="stat-icon" style="background:#E8F5E9">🏆</div><div class="stat-info"><h3>2</h3><p>Melampaui KKTP</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#E3F2FD">✅</div><div class="stat-info"><h3>1</h3><p>Tercapai</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FFF3E0">⚠️</div><div class="stat-info"><h3>1</h3><p>Tercapai Sebagian</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FCE4EC">❌</div><div class="stat-info"><h3>1</h3><p>Belum Tercapai</p></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Rekap Nilai</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Siswa</th><th>Mapel</th><th>ATP</th><th>Jenis</th><th>Nilai</th><th>KKTP</th><th>Catatan</th></tr></thead>
+        <tbody>
+          ${DATA.nilai.map(n=>`
+            <tr>
+              <td><strong>${n.siswa}</strong></td>
+              <td>${n.mapel}</td>
+              <td>${n.atp}</td>
+              <td><span class="chip chip-gray">${n.jenis}</span></td>
+              <td>
+                <span style="font-size:16px;font-weight:700;color:${n.nilai<56?'var(--merah)':n.nilai<71?'var(--kuning)':n.nilai<86?'var(--hijau)':'var(--hijau-muda)'};">${n.nilai}</span>
+              </td>
+              <td><span class="badge ${n.kktp==='Melampaui'?'badge-t':n.kktp==='Tercapai'?'badge-t':n.kktp.includes('Sebagian')?'badge-ts':'badge-bm'}">${n.kktp}</span></td>
+              <td style="font-size:12px;color:var(--teks-muda);max-width:180px;">${n.catatan}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderLaporan() {
+  return `
+  <div class="page-header"><h1>Laporan & Analitik</h1><p>Rekap data pembelajaran PKBM Piwulang Becik</p></div>
+  <div class="page-tabs">
+    <button class="page-tab active" id="ltab-bulanan" onclick="switchLaporanTab('bulanan')">Bulanan</button>
+    <button class="page-tab" id="ltab-siswa" onclick="switchLaporanTab('siswa')">Per Siswa</button>
+    <button class="page-tab" id="ltab-mapel" onclick="switchLaporanTab('mapel')">Per Mapel</button>
+  </div>
+  <div id="lap-bulanan">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📈 ATP Tercapai per Bulan</span></div>
+        ${[
+          {bulan:'Oktober 2025', jml:12},
+          {bulan:'November 2025', jml:15},
+          {bulan:'Desember 2025', jml:9},
+          {bulan:'Januari 2026', jml:18},
+          {bulan:'Februari 2026', jml:21},
+          {bulan:'Maret 2026', jml:8},
+        ].map(b=>`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:12px;width:130px;flex-shrink:0;">${b.bulan}</span>
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${b.jml/21*100}%"></div></div>
+            <span style="font-size:12px;font-weight:600;width:30px;">${b.jml}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 Distribusi Nilai</span></div>
+        ${[
+          {level:'Melampaui (86–100)', persen:38, warna:'var(--hijau)'},
+          {level:'Tercapai (71–85)', persen:30, warna:'var(--hijau-terang)'},
+          {level:'Tercapai Sebagian (56–70)', persen:20, warna:'var(--kuning)'},
+          {level:'Belum Tercapai (0–55)', persen:12, warna:'var(--merah)'},
+        ].map(d=>`
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12.5px;">${d.level}</span>
+              <span style="font-size:12px;font-weight:700;">${d.persen}%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${d.persen}%;background:${d.warna}"></div></div>
+          </div>
+        `).join('')}
+        <button class="btn btn-primary btn-sm mt-3" style="width:100%" onclick="alert('Fitur ekspor PDF/Excel akan tersedia di versi berikutnya.')">⬇ Ekspor Laporan</button>
+      </div>
+    </div>
+  </div>
+  <div id="lap-siswa" class="hidden">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Laporan per Siswa</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nama</th><th>Fase</th><th>ATP Selesai</th><th>Rata-rata Nilai</th><th>Status</th></tr></thead>
+          <tbody>
+            ${DATA.siswa.map(s=>`
+              <tr>
+                <td><strong>${s.nama}</strong></td>
+                <td>${s.fase}</td>
+                <td>${Math.floor(s.progress/25)} / 11</td>
+                <td><strong>${s.progress > 80?88:s.progress>60?74:52}</strong></td>
+                <td><span class="badge ${s.progress>80?'badge-t':s.progress>60?'badge-sb':'badge-ts'}">${s.progress>80?'Baik':'Perlu Monitoring'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="lap-mapel" class="hidden">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Laporan per Mata Pelajaran</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mata Pelajaran</th><th>Total ATP</th><th>ATP Tercapai</th><th>Avg Nilai</th><th>Butuh Remedial</th></tr></thead>
+          <tbody>
+            ${DATA.atp.map(a=>`
+              <tr>
+                <td><strong>${a.ikon} ${a.mapel}</strong></td>
+                <td>${a.items.length}</td>
+                <td>${a.items.filter(i=>i.status==='T').length}</td>
+                <td>77</td>
+                <td>2 siswa</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function switchLaporanTab(tab) {
+  ['bulanan','siswa','mapel'].forEach(t=>{
+    document.getElementById('lap-'+t).classList.toggle('hidden', t!==tab);
+    document.getElementById('ltab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+function renderNotifikasi() {
+  return `
+  <div class="page-header"><h1>Notifikasi</h1><p>Informasi dan pembaruan terkini</p></div>
+  <div class="card">
+    ${DATA.notif.map(n=>`
+      <div class="notif-item">
+        <div class="notif-dot ${n.tipe}"></div>
+        <div style="flex:1;">
+          <div class="notif-text">${n.teks}</div>
+          <div class="notif-time">${n.waktu}</div>
+        </div>
+        <button class="btn btn-sm btn-outline" style="flex-shrink:0;">Tandai Dibaca</button>
+      </div>
+    `).join('')}
+  </div>
+  <div class="card mt-3">
+    <div class="card-header"><span class="card-title">✉ Kirim Pengumuman</span></div>
+    <div class="form-group"><label>Kepada</label>
+      <select class="form-input"><option>Semua Siswa</option><option>Semua Tutor</option><option>Fase A</option><option>Fase B</option><option>Semua Pengguna</option></select>
+    </div>
+    <div class="form-group"><label>Pesan Pengumuman</label>
+      <textarea class="form-input" placeholder="Tulis pengumuman di sini..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="alert('Pengumuman terkirim!')">Kirim Pengumuman</button>
+  </div>`;
+}
+
+let activeChatPerson = 'Bu Ratna';
+function renderPesan(role) {
+  const isSiswa = role === 'siswa';
+  const contacts = isSiswa
+    ? [
+        { name:'Bu Ratna', sub:'Tutor Pembimbing', avatar:'👩‍🏫', unread:1 },
+        { name:'Admin PKBM', sub:'Administrasi', avatar:'👨‍💼', unread:0 },
+      ]
+    : [
+        { name:'Budi Santoso', sub:'Siswa · Fase A', avatar:'🧑‍🎓', unread:0 },
+        { name:'Ani Rahayu',   sub:'Siswa · Fase A', avatar:'🧑‍🎓', unread:0 },
+        { name:'Deni Firmansyah', sub:'Siswa · Fase C', avatar:'🧑‍🎓', unread:1 },
+        { name:'Bu Ratna',    sub:'Tutor',    avatar:'👩‍🏫', unread:0 },
+      ];
+
+  const msgs = DATA.chat[activeChatPerson] || [];
+  return `
+  <div class="page-header"><h1>Pesan</h1><p>Komunikasi antara tutor dan peserta didik</p></div>
+  <div class="chat-layout">
+    <div class="chat-list">
+      ${contacts.map(c=>`
+        <div class="chat-person ${activeChatPerson===c.name?'active':''}" onclick="openChat('${c.name}')">
+          <div class="chat-avatar">${c.avatar}</div>
+          <div class="chat-person-info">
+            <h4>${c.name}</h4>
+            <p>${c.sub}</p>
+          </div>
+          ${c.unread?`<span class="chat-unread">${c.unread}</span>`:''}
+        </div>
+      `).join('')}
+    </div>
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="chat-avatar">${contacts.find(c=>c.name===activeChatPerson)?.avatar||'💬'}</div>
+        <div><strong>${activeChatPerson}</strong><br><span style="font-size:12px;color:var(--abu-gelap)">Online</span></div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        ${msgs.length===0?`<div class="empty-state"><div class="e-icon">💬</div><p>Belum ada pesan. Mulai percakapan!</p></div>`:''}
+        ${msgs.map(m=>`
+          <div class="msg ${m.from==='me'?'sent':'recv'}">
+            <div class="msg-bubble">${m.text}</div>
+            <div class="msg-time">${m.time}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="chat-input-area">
+        <input class="chat-input" id="chat-input" placeholder="Tulis pesan..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="btn-send" onclick="sendMsg()">➤</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openChat(name) {
+  activeChatPerson = name;
+  navigate('pesan');
+}
+function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  if(!DATA.chat[activeChatPerson]) DATA.chat[activeChatPerson]=[];
+  const now = new Date();
+  DATA.chat[activeChatPerson].push({ from:'me', text, time:`${now.getHours().toString().padStart(2,'0')}.${now.getMinutes().toString().padStart(2,'0')}` });
+  inp.value='';
+  navigate('pesan');
+  setTimeout(()=>{
+    const cm = document.getElementById('chat-messages');
+    if(cm) cm.scrollTop=cm.scrollHeight;
+  },50);
+}
+
+function renderNilaiSiswa() {
+  return `
+  <div class="page-header"><h1>Nilai Saya</h1><p>Rekap penilaian dan perkembangan belajarmu</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon" style="background:#E8F5E9">📊</div><div class="stat-info"><h3>78</h3><p>Rata-rata Nilai</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FFF3E0">✅</div><div class="stat-info"><h3>3</h3><p>Penilaian Selesai</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#FCE4EC">📝</div><div class="stat-info"><h3>1</h3><p>Perlu Remedial</p></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Riwayat Nilai</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mata Pelajaran</th><th>ATP</th><th>Jenis</th><th>Nilai</th><th>KKTP</th><th>Catatan Tutor</th></tr></thead>
+        <tbody>
+          ${DATA.nilai.filter(n=>n.siswa==='Budi Santoso').map(n=>`
+            <tr>
+              <td><strong>${n.mapel}</strong></td>
+              <td>${n.atp}</td>
+              <td>${n.jenis}</td>
+              <td><span style="font-size:18px;font-weight:700;color:${n.nilai<56?'var(--merah)':n.nilai<71?'var(--kuning)':'var(--hijau)'};">${n.nilai}</span></td>
+              <td><span class="badge ${n.kktp==='Melampaui'||n.kktp==='Tercapai'?'badge-t':n.kktp.includes('Sebagian')?'badge-ts':'badge-bm'}">${n.kktp}</span></td>
+              <td style="font-size:12px;color:var(--teks-muda);">${n.catatan}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderLogBelajar() {
+  return `
+  <div class="page-header-row">
+    <div class="page-header"><h1>Log Belajar</h1><p>Catat kegiatan dan refleksi belajarmu setiap hari</p></div>
+    <button class="btn btn-primary" onclick="tambahLog()">+ Tambah Log</button>
+  </div>
+  <div id="log-list">
+    ${DATA.logBelajar.map((l,i)=>`
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:24px;">📓</div>
+            <div>
+              <div style="font-weight:600;font-size:14px;">${l.mapel} — ${l.atp}</div>
+              <div style="font-size:12px;color:var(--abu-gelap)">${l.tanggal} · Durasi: ${l.durasi}</div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="hapusLog(${i})">Hapus</button>
+        </div>
+        <div style="background:var(--abu);border-radius:8px;padding:12px;font-size:13.5px;color:var(--teks);font-style:italic;">"${l.refleksi}"</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function tambahLog() {
+  const mapel = prompt('Mata Pelajaran:','Pancasila');
+  if(!mapel) return;
+  const refleksi = prompt('Refleksi belajar hari ini:','');
+  if(!refleksi) return;
+  DATA.logBelajar.unshift({ tanggal: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}), mapel, atp:'ATP-Baru', durasi:'60 mnt', refleksi });
+  navigate('log-belajar');
+}
+function hapusLog(i) {
+  if(confirm('Hapus log ini?')) { DATA.logBelajar.splice(i,1); navigate('log-belajar'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODALS & FORM ACTIONS
+// ═══════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function saveSiswa() {
+  const nama = document.getElementById('f-nama').value.trim();
+  if(!nama){ alert('Nama wajib diisi!'); return; }
+  DATA.siswa.push({
+    id: DATA.siswa.length+1, nama,
+    nisn: document.getElementById('f-nisn').value||'-',
+    paket: document.getElementById('f-paket').value,
+    fase: document.getElementById('f-fase').value,
+    tutor: document.getElementById('f-tutor').value,
+    hp: document.getElementById('f-hp').value||'-',
+    progress: 0
+  });
+  closeModal('modal-siswa');
+  navigate('siswa');
+}
+function hapusSiswa(id) {
+  if(confirm('Hapus data siswa ini?')) {
+    const idx = DATA.siswa.findIndex(s=>s.id===id);
+    if(idx>=0) { DATA.siswa.splice(idx,1); navigate('siswa'); }
+  }
+}
+function saveTutor() {
+  const nama = document.getElementById('t-nama').value.trim();
+  if(!nama){ alert('Nama wajib diisi!'); return; }
+  DATA.tutors.push({
+    id: DATA.tutors.length+1, nama,
+    nuptk: document.getElementById('t-nuptk').value||'-',
+    mapel: document.getElementById('t-mapel').value,
+    hp: document.getElementById('t-hp').value||'-',
+    siswa: 0
+  });
+  closeModal('modal-tutor');
+  navigate('tutor');
+}
+function saveNilai() {
+  const nilai = parseInt(document.getElementById('n-nilai').value);
+  if(!nilai){ alert('Nilai wajib diisi!'); return; }
+  DATA.nilai.unshift({
+    siswa: document.getElementById('n-siswa').value,
+    mapel: document.getElementById('n-mapel').value,
+    atp: document.getElementById('n-atp').value.split('–')[0].trim(),
+    jenis: document.getElementById('n-jenis').value,
+    nilai,
+    kktp: document.getElementById('n-kktp').value.split('(')[0].trim(),
+    catatan: document.getElementById('n-catatan').value||'-'
+  });
+  closeModal('modal-nilai');
+  navigate('penilaian');
+}
+
+// Close modal on outside click
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
